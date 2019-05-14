@@ -79,7 +79,7 @@ RUN cd /tmp && \
 USER root
 
 RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-ENV DOCKER_HOST=unix:///var/run/dockeri.sock
+ENV DOCKER_HOST=tcp://0.0.0.0:2375
 
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
