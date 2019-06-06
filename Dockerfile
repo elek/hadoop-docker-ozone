@@ -15,19 +15,19 @@
 # limitations under the License.
 
 FROM centos@sha256:b5e66c4651870a1ad435cd75922fe2cb943c9e973a9673822d1414824a1d0475
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN yum install -y sudo python2-pip wget nmap-ncat jq java-11-openjdk
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+  yum install -y sudo python2-pip wget nmap-ncat jq java-11-openjdk krb5-workstation && yum clean all
 
 #For executing inline smoketest
 RUN pip install robotframework
 
 #dumb init for proper init handling
-RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
-RUN chmod +x /usr/local/bin/dumb-init
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 && \
+  chmod +x /usr/local/bin/dumb-init
 
 #byteman test for development
-ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.4/byteman-4.0.4.jar /opt/byteman.jar
-RUN chmod o+r /opt/byteman.jar
+RUN wget https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.4/byteman-4.0.4.jar -O /opt/byteman.jar && \
+  chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
 RUN mkdir -p /opt/profiler && \
@@ -38,23 +38,21 @@ ENV JAVA_HOME=/usr/lib/jvm/jre/
 
 ENV PATH /opt/hadoop/bin/docker:$PATH:/opt/hadoop/bin
 
-RUN groupadd --gid 1000 hadoop
-RUN useradd --uid 1000 hadoop --gid 100 --home /opt/hadoop
-RUN chmod 755 /opt/hadoop
-RUN echo "hadoop ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+#User and permission settings
+RUN groupadd --gid 1000 hadoop && \
+  useradd --uid 1000 hadoop --gid 100 --home /opt/hadoop && \
+  chmod 755 /opt/hadoop && \
+  echo "hadoop ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+  chown hadoop /opt && \
+  mkdir -p /etc/hadoop && mkdir -p /var/log/hadoop && chmod 1777 /etc/hadoop && chmod 1777 /var/log/hadoop && \
+  mkdir /data && chmod 1777 /data && \
+  mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
 
-RUN chown hadoop /opt
-
-#Be prepared for kerbebrizzed cluster
-RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
 ADD krb5.conf /etc/
-RUN yum install -y krb5-workstation
 
 #Make it compatible with any UID/GID (write premission may be missing to /opt/hadoop
-RUN mkdir -p /etc/hadoop && mkdir -p /var/log/hadoop && chmod 1777 /etc/hadoop && chmod 1777 /var/log/hadoop
 ENV HADOOP_LOG_DIR=/var/log/hadoop
 ENV HADOOP_CONF_DIR=/etc/hadoop
-RUN mkdir /data && chmod 1777 /data
 
 WORKDIR /opt/hadoop
 USER hadoop
