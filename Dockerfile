@@ -21,7 +21,7 @@ RUN yum -y install gcc gcc-c++ kernel-devel make autoconf wget automake libtool 
    file python-devel \
    git \
    jq \
-
+   sudo 
 
 
 #RUN apk add --update --no-cache bash alpine-sdk maven jq grep openjdk8 py-pip rsync procps autoconf automake libtool findutils coreutils
@@ -102,3 +102,5 @@ RUN cd /tmp && git clone --depth=1 https://github.com/apache/hadoop.git -b trunk
    rm -rf /home/user/.m2/repository/org/apache/hadoop/*ozone* && \ 
    rm -rf /tmp/hadoop && \ 
    find /home/user/.m2/repository -exec chmod o+wx {} \;
+
+RUN yum install -y sudo
